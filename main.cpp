@@ -252,7 +252,7 @@ int start_tapping_the_watchdog(char *path, int device_id)
                           err_cnt=0;
                         }
 
-			sleep(2);
+			sleep(200);
 		}
 	}
 
@@ -286,7 +286,7 @@ int stop_tapping_the_watchdog(char *path, int device_id)
 				}
 			}
 
-			sleep(2);
+			sleep(200);
 		
 	
 
