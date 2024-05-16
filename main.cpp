@@ -243,7 +243,7 @@ int start_tapping_the_watchdog(char *path, int device_id)
 
 				if (err_cnt == 20)
 				{
-					syslog(LOG_ERR, "Failed to tap the watchdog 10 times");
+					syslog(LOG_ERR, "Failed to tap the watchdog 20 times");
 					exit(1);
 				}
 			}
@@ -281,7 +281,7 @@ int stop_tapping_the_watchdog(char *path, int device_id)
 
 				if (err_cnt == 10)
 				{
-					syslog(LOG_ERR, "Failed to tap the watchdog 10 times");
+					syslog(LOG_ERR, "Failed to tap the watchdog 20 times");
 					exit(1);
 				}
 			}
