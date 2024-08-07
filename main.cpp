@@ -144,6 +144,8 @@ void usage(void)
 #define MULTISWITCH_DIRECTION	12
 #define CONFIGURE_SWITCH	13
 
+void do_tapping_loop(char *path, int device_id);
+
 int find_usb_id(CUSBaccess *pCWusb, int dev_count, int device_id)
 {
 	int devID, usb_id = -1;
@@ -167,131 +169,85 @@ int find_usb_id(CUSBaccess *pCWusb, int dev_count, int device_id)
 
 int start_tapping_the_watchdog_without_fork(char *path, int device_id)
 {
-	CUSBaccess CWusb;
-        int dev_count = CWusb.OpenCleware(path);
-
-	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
-
-
 	printf("Watchdog started\n");
-		int err_cnt = 0;
-
-
-		for(;;)
-		{
-			int time1 = 1, time2 = 0;
-
-			if (!CWusb.CalmWatchdog(usb_id, time1, time2))
-			{
-				err_cnt++;
-				if (err_cnt == 20)
-				{
-					syslog(LOG_ERR, "Failed to tap the watchdog 10 times");
-					exit(1);
-				}
-			}
-                        else
-                        {
-                          err_cnt=0;
-                        }
-
-			sleep(2);
-		}
-	
-
-
-
+	do_tapping_loop(path,device_id);
 	return 0;
 }
 
 int start_tapping_the_watchdog(char *path, int device_id)
 {
-	CUSBaccess CWusb;
-        int dev_count = CWusb.OpenCleware(path);
-
-	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
-
 	pid_t pid = fork();
-
 	if (pid == -1)
 	{
 		fprintf(stderr, "Failed to fork");
 		return 1;
 	}
-
 	if (pid == 0)
 	{
-		int err_cnt = 0;
-
 		if (daemon(0, 0) == -1)
 		{
 			fprintf(stderr, "Failed to become daemon process\n");
 			return 1;
 		}
-
-                FILE *fp;
-                fp = fopen("/run/cleware.pid", "w+");
-	        fprintf(fp,"%d", getpid() );
-	        fclose(fp);
-		for(;;)
-		{
-			int time1 = 1, time2 = 0;
-
-			if (!CWusb.CalmWatchdog(usb_id, time1, time2))
-			{
-				err_cnt++;
-
-				if (err_cnt == 20)
-				{
-					syslog(LOG_ERR, "Failed to tap the watchdog 20 times");
-					exit(1);
-				}
-			}
-                        else
-                        {
-                          err_cnt=0;
-                        }
-
-			sleep(200);
-		}
+		FILE *fp;
+		fp = fopen("/run/cleware.pid", "w+");
+		fprintf(fp,"%d", getpid() );
+		fclose(fp);
+		do_tapping_loop(path,device_id);
 	}
 
 	printf("Watchdog started\n");
-
 	return 0;
+}
+
+void do_tapping_loop(char *path, int device_id)
+{
+	CUSBaccess CWusb;
+        int dev_count = CWusb.OpenCleware(path);
+	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
+	int err_cnt = 0;
+	for(;;)
+		{
+			int time1 = 2, time2 = 0;
+			if (!CWusb.CalmWatchdog(usb_id, time1, time2))
+			{
+				err_cnt++;
+				if (err_cnt == 5)
+				{
+					syslog(LOG_ERR, "Failed to tap the watchdog 5 times");					
+				}
+				else if (err_cnt == 100)
+				{
+					syslog(LOG_ERR, "Failed to tap the watchdog 100 times");
+					exit(1);
+				}
+			}
+			else
+			{
+				err_cnt=0;
+			}
+			sleep(200);
+		}
 }
 
 int stop_tapping_the_watchdog(char *path, int device_id)
 {
 	CUSBaccess CWusb;
-        int dev_count = CWusb.OpenCleware(path);
-
+    int dev_count = CWusb.OpenCleware(path);
 	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
-
-	
-
-	
-		int err_cnt = 0;
-
-	    int time1 = 0, time2 = 0;
-
-			if (!CWusb.CalmWatchdog(usb_id, time1, time2))
-			{
-				err_cnt++;
-
-				if (err_cnt == 10)
-				{
-					syslog(LOG_ERR, "Failed to tap the watchdog 20 times");
-					exit(1);
-				}
-			}
-
-			sleep(200);
-		
-	
-
+	int err_cnt = 0;
+	int time1 = 0, time2 = 0;
+	if (!CWusb.CalmWatchdog(usb_id, time1, time2))
+	{
+		err_cnt++;
+		if (err_cnt == 10)
+		{
+			syslog(LOG_ERR, "Failed to defuse the watchdog");
+			exit(1);
+		}
+	}
+	sleep(200);
 	printf("disabled\n");
-
 	return 0;
 }
 

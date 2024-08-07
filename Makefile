@@ -1,4 +1,4 @@
-VERSION=1.4
+VERSION=1.5
 
 DEBUG=-g -W -pedantic #-pg #-fprofile-arcs
 LDFLAGS=-lstdc++ $(DEBUG)
