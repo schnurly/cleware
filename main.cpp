@@ -203,7 +203,7 @@ int start_tapping_the_watchdog(char *path, int device_id)
 void do_tapping_loop(char *path, int device_id)
 {
 	CUSBaccess CWusb;
-        int dev_count = CWusb.OpenCleware(path);
+    int dev_count = CWusb.OpenCleware(path);
 	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
 	int err_cnt = 0;
 	for(;;)
@@ -216,22 +216,24 @@ void do_tapping_loop(char *path, int device_id)
 				{
 					syslog(LOG_ERR, "Failed to tap the watchdog 5 times");					
 				}
-				else if (err_cnt == 100)
+				else if (err_cnt % 100 == 99)
 				{
 					syslog(LOG_ERR, "Failed to tap the watchdog 100 times");
-					exit(1);
+					//exit(1);
 				}
+				sleep(100);
 			}
 			else
 			{
 				err_cnt=0;
 			}
-			sleep(200);
+			sleep(10);
 		}
 }
 
 int stop_tapping_the_watchdog(char *path, int device_id)
 {
+	printf("try to calm watchdog\n");
 	CUSBaccess CWusb;
     int dev_count = CWusb.OpenCleware(path);
 	int usb_id = find_usb_id(&CWusb, dev_count, device_id);
@@ -267,7 +269,7 @@ int do_command(char *path, int device_id, int command, int par, int par2, double
 
 	if (device_id == -1)
 	{
-		if (!brief) printf("Using device with serial number: %d\n", CWusb.GetSerialNumber(usb_id));
+		if (!brief) printf("Using device with serial number: %d\n", CWusb.GetSerialNumber(usb_id));	
 	}
 
 	for(retry=0; retry<retry_count; retry++)
